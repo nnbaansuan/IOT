@@ -320,8 +320,10 @@
 
     <script>
         // --- MQTT Configuration ---
+        // เปลี่ยนมาใช้ Path "/mqtt" เพื่อให้ตรงตามมาตรฐานของ HiveMQ Public Broker
         const BROKER = "broker.hivemq.com";
         const PORT = 8884; // Secure WebSockets
+        const PATH = "/mqtt"; 
         const CLIENT_ID = "pharaoh_web_" + Math.random().toString(36).substr(2, 5);
 
         const TOPIC_TEMP = "ccp/esp32/temperature";
@@ -331,4 +333,20 @@
         const TOPIC_RELAY1_STATUS = "ccp/relay1/status";
         const TOPIC_RELAY2_STATUS = "ccp/relay2/status";
 
-        let mqttClient = new Paho.MQTT.Client(BROKER, Number(PORT), CLIENT_ID
+        // เพิ่มตัวแปร PATH เข้าไปใน Parameter ตัวที่ 4
+        let mqttClient = new Paho.MQTT.Client(BROKER, Number(PORT), PATH, CLIENT_ID);
+
+        mqttClient.onConnectionLost = onConnectionLost;
+        mqttClient.onMessageArrived = onMessageArrived;
+
+        const mqttOptions = {
+            useSSL: true,
+            timeout: 3,
+            keepAliveInterval: 60,
+            onSuccess: onConnect,
+            onFailure: onFailure,
+            reconnect: true // เปิดใช้งาน Auto Reconnect
+        };
+
+        // เริ่มต้นเชื่อมต่อ
+        mqttClient.connect(mqttOptions);
