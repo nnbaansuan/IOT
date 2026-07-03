@@ -3,124 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pharaoh's Matrix Chamber</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <title>Pharaoh Command Center</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --matrix-green: #00ff41;
-            --pharaoh-gold: #ffd700;
-            --overlay-dark: rgba(13, 13, 13, 0.75); /* พื้นหลังการ์ดโปร่งแสงเพื่อให้เห็นภาพ */
+            --gold: #d4af37;
+            --dark-gold: #aa8413;
+            --egyptian-blue: #102a45;
+            --glass-bg: rgba(16, 20, 30, 0.75);
+            --border-gold: 2px solid #d4af37;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Courier New', Courier, monospace;
-            /* 3. ใช้ภาพพื้นหลังตามที่คุณแนบมา */
-            background: url('egyptian-hieroglyphs-wall.jpg') no-repeat center center fixed;
+            background-image: url('egyptian-hieroglyphs-wall.jpg');
             background-size: cover;
-            color: var(--matrix-green);
-            margin: 0;
-            padding: 15px;
-            box-sizing: border-box;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.6);
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
             min-height: 100vh;
+            padding: 15px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* เลเยอร์เพิ่มความมืดให้ภาพพื้นหลังเล็กน้อยเพื่อให้อ่านตัวอักษรง่ายขึ้น */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
-        }
-
-        h1, h2, h3 {
-            color: var(--pharaoh-gold);
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            border-bottom: 2px dashed var(--pharaoh-gold);
-            padding-bottom: 10px;
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-        }
-
+        /* Container Wrapper */
         .container {
             max-width: 480px;
             margin: 0 auto;
-        }
-
-        /* การ์ดสไตล์แก้วโปร่งแสงเห็นทะลุถึงฉากหลังอียิปต์ */
-        .card {
-            background: var(--overlay-dark);
-            border: 1px solid var(--pharaoh-gold);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
-            backdrop-filter: blur(3px); /* เพิ่มเอฟเฟกต์เบลอฉากหลังให้ดูหรูหรา */
-            -webkit-backdrop-filter: blur(3px);
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--pharaoh-gold);
-            margin-bottom: 15px;
-            background: rgba(0,0,0,0.6);
-            padding: 8px 12px;
-            border-radius: 6px;
-            border-left: 3px solid var(--matrix-green);
-        }
-
-        .sensor-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .sensor-box {
-            text-align: center;
-            padding: 12px 5px;
-            border: 1px solid var(--matrix-green);
-            background: rgba(0,0,0,0.4);
-            border-radius: 6px;
-        }
-
-        .sensor-val {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffffff;
-            margin-top: 5px;
-            text-shadow: 0 0 10px var(--matrix-green);
-        }
-
-        .relay-control {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        .relay-item {
+        /* Hieroglyphic Matrix Header */
+        .header-panel {
+            background: var(--glass-bg);
+            border: var(--border-gold);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .header-panel h1 {
+            color: var(--gold);
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        }
+
+        .ntp-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .connection-status {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #ff4d4d;
+        }
+        .connection-status.connected {
+            color: #4def8e;
+        }
+
+        /* Telemetry Cards */
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .sensor-card {
+            background: var(--glass-bg);
+            border: var(--border-gold);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .sensor-card i {
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .sensor-label {
+            font-size: 0.85rem;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        .sensor-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #fff;
+        }
+
+        /* Control & Timer Panels */
+        .panel {
+            background: var(--glass-bg);
+            border: var(--border-gold);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(8px);
+        }
+
+        .panel-title {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Slide Switch Style */
+        .control-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(215, 175, 55, 0.2);
+        }
+        .control-row:last-child {
+            border-bottom: none;
         }
 
-        .relay-name {
-            font-weight: bold;
-            color: var(--pharaoh-gold);
+        .relay-info h3 {
+            font-size: 1rem;
         }
-
         .relay-status-text {
-            font-size: 0.9rem;
-            margin-right: 10px;
+            font-size: 0.8rem;
+            color: #aaa;
         }
 
-        /* Toggle Switch Custom */
+        /* iOS Switch */
         .switch {
             position: relative;
             display: inline-block;
@@ -128,267 +162,173 @@
             height: 34px;
         }
 
-        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
         .slider {
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #222;
+            background-color: #333;
             transition: .4s;
             border-radius: 34px;
-            border: 1px solid var(--matrix-green);
+            border: 1px solid var(--gold);
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 26px; width: 26px;
-            left: 3px; bottom: 3px;
-            background-color: var(--matrix-green);
+            height: 26px;
+            width: 26px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--gold);
             transition: .4s;
             border-radius: 50%;
         }
 
         input:checked + .slider {
-            background-color: rgba(0, 255, 65, 0.3);
-            border-color: var(--pharaoh-gold);
+            background-color: var(--egyptian-blue);
+            box-shadow: 0 0 10px rgba(214, 175, 55, 0.6);
         }
 
         input:checked + .slider:before {
             transform: translateX(26px);
-            background-color: var(--pharaoh-gold);
-            box-shadow: 0 0 8px var(--pharaoh-gold);
+            background-color: #fff;
         }
 
-        /* Timer Section */
-        .timer-section h3 {
+        /* Timer Sub-sections */
+        .timer-section {
+            margin-bottom: 15px;
+        }
+        .timer-section:last-child {
+            margin-bottom: 0;
+        }
+        .timer-sub-title {
             font-size: 0.95rem;
-            border: none;
-            text-align: left;
-            margin: 5px 0;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .timer-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .timer-slot {
-            display: flex;
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
             align-items: center;
-            justify-content: space-between;
-            gap: 5px;
-            margin-bottom: 10px;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .timer-slot span {
             font-size: 0.8rem;
-            background: rgba(0,0,0,0.3);
-            padding: 5px;
-            border-radius: 4px;
+            color: #ddd;
+            width: 20px;
         }
 
         .timer-slot input[type="time"] {
-            background: #000;
-            border: 1px solid var(--matrix-green);
-            color: var(--matrix-green);
-            padding: 3px;
-            border-radius: 3px;
-        }
-
-        .timer-slot input[type="checkbox"] {
-            accent-color: var(--matrix-green);
+            background: #222;
+            border: 1px solid var(--gold);
+            color: #fff;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            text-align: center;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>𓁹 Pharaoh's Matrix 𓁹</h1>
+    <div class="container">
+        <div class="header-panel">
+            <h1>PHARAOH CONTROL</h1>
+            <div class="ntp-time" id="ntp-clock">00:00:00</div>
+            <div class="connection-status" id="mqtt-status"><i class="fas fa-circle-notch fa-spin"></i> Connecting to Nile Broker...</div>
+        </div>
 
-    <div class="status-bar">
-        <span id="mqtt-status">MQTT: DISCONNECTED</span>
-        <span id="ntp-clock">TIME: --:--:--</span>
-    </div>
-
-    <div class="card">
         <div class="sensor-grid">
-            <div class="sensor-box">
-                <div>🌡️ TEMPERATURE</div>
-                <div class="sensor-val" id="temp-val">-- °C</div>
+            <div class="sensor-card">
+                <i class="fas fa-thermometer-half"></i>
+                <div class="sensor-label">Temperature</div>
+                <div class="sensor-value" id="temp-val">--.- °C</div>
             </div>
-            <div class="sensor-box">
-                <div>💧 HUMIDITY</div>
-                <div class="sensor-val" id="hum-val">-- %</div>
+            <div class="sensor-card">
+                <i class="fas fa-tint"></i>
+                <div class="sensor-label">Humidity</div>
+                <div class="sensor-value" id="hum-val">--.- %</div>
             </div>
         </div>
-    </div>
 
-    <div class="card">
-        <h2>𓋹 CHAMBER RELAYS</h2>
-        <div class="relay-control">
-            <div class="relay-item">
-                <div>
-                    <span class="relay-name">RELAY 1</span><br>
-                    <span class="relay-status-text" id="r1-status">Status: Unknown</span>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-bolt"></i> Relay Command</div>
+            
+            <div class="control-row">
+                <div class="relay-info">
+                    <h3>Relay 1</h3>
+                    <div class="relay-status-text" id="status-relay1">Status: Offline</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="r1-toggle" onchange="toggleRelay(1, this.checked)">
+                    <input type="checkbox" id="cmd-relay1" onchange="toggleRelay(1, this.checked)">
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="relay-item">
-                <div>
-                    <span class="relay-name">RELAY 2</span><br>
-                    <span class="relay-status-text" id="r2-status">Status: Unknown</span>
+
+            <div class="control-row">
+                <div class="relay-info">
+                    <h3>Relay 2</h3>
+                    <div class="relay-status-text" id="status-relay2">Status: Offline</div>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" id="r2-toggle" onchange="toggleRelay(2, this.checked)">
+                    <input type="checkbox" id="cmd-relay2" onchange="toggleRelay(2, this.checked)">
                     <span class="slider"></span>
                 </label>
             </div>
         </div>
+
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-hourglass-half"></i> Sacred Timers (3 Slots)</div>
+            
+            <div class="timer-section">
+                <div class="timer-sub-title"><i class="fas fa-circle-notch"></i> Relay 1 Scheduler</div>
+                <div class="timer-grid">
+                    <div class="timer-slot"><span>1</span><input type="time" id="r1-on-1"> <input type="time" id="r1-off-1"></div>
+                    <div class="timer-slot"><span>2</span><input type="time" id="r1-on-2"> <input type="time" id="r1-off-2"></div>
+                    <div class="timer-slot"><span>3</span><input type="time" id="r1-on-3"> <input type="time" id="r1-off-3"></div>
+                </div>
+            </div>
+
+            <div class="timer-section">
+                <div class="timer-sub-title"><i class="fas fa-circle-notch"></i> Relay 2 Scheduler</div>
+                <div class="timer-grid">
+                    <div class="timer-slot"><span>1</span><input type="time" id="r2-on-1"> <input type="time" id="r2-off-1"></div>
+                    <div class="timer-slot"><span>2</span><input type="time" id="r2-on-2"> <input type="time" id="r2-off-2"></div>
+                    <div class="timer-slot"><span>3</span><input type="time" id="r2-on-3"> <input type="time" id="r2-off-3"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>𓆗 SACRED TIMERS</h2>
-        
-        <div class="timer-section">
-            <h3>RELAY 1 SCHEDULE</h3>
-            <div id="r1-timers"></div>
-        </div>
-        
-        <hr style="border-color: rgba(255,215,0,0.2); margin: 15px 0;">
+    <script>
+        // --- MQTT Configuration ---
+        const BROKER = "broker.hivemq.com";
+        const PORT = 8884; // Secure WebSockets
+        const CLIENT_ID = "pharaoh_web_" + Math.random().toString(36).substr(2, 5);
 
-        <div class="timer-section">
-            <h3>RELAY 2 SCHEDULE</h3>
-            <div id="r2-timers"></div>
-        </div>
-    </div>
-</div>
+        const TOPIC_TEMP = "ccp/esp32/temperature";
+        const TOPIC_HUM = "ccp/esp32/humidity";
+        const TOPIC_RELAY1_CMD = "ccp/relay1/cmd";
+        const TOPIC_RELAY2_CMD = "ccp/relay2/cmd";
+        const TOPIC_RELAY1_STATUS = "ccp/relay1/status";
+        const TOPIC_RELAY2_STATUS = "ccp/relay2/status";
 
-<script>
-    // TOPICS DEFINITION
-    const TOPIC_TEMP = "ccp/esp32/temperature";
-    const TOPIC_HUM = "ccp/esp32/humidity";
-    const TOPIC_R1_CMD = "ccp/relay1/cmd";
-    const TOPIC_R2_CMD = "ccp/relay2/cmd";
-    const TOPIC_R1_STAT = "ccp/relay1/status";
-    const TOPIC_R2_STAT = "ccp/relay2/status";
-
-    // 1.4 HiveMQ WebSockets (wss) Port 8884 สำหรับ Web Browser
-    const brokerUrl = "wss://broker.hivemq.com:8884/mqtt"; 
-    
-    const options = {
-        clientId: 'iphone_pharaoh_' + Math.random().toString(16).substr(2, 8),
-        keepalive: 60,
-        clean: true
-    };
-
-    const client = mqtt.connect(brokerUrl, options);
-
-    client.on('connect', () => {
-        document.getElementById('mqtt-status').innerText = "𓀚 MQTT: ONLINE";
-        document.getElementById('mqtt-status').style.color = "var(--matrix-green)";
-        
-        // Subscribe ทั้งข้อมูลเซนเซอร์ และสถานะของ Relay
-        client.subscribe([TOPIC_TEMP, TOPIC_HUM, TOPIC_R1_STAT, TOPIC_R2_STAT], (err) => {
-            if (!err) console.log("Subscribed to Pharaoh topics");
-        });
-    });
-
-    client.on('offline', () => {
-        document.getElementById('mqtt-status').innerText = "MQTT: OFFLINE";
-        document.getElementById('mqtt-status').style.color = "#ff4444";
-    });
-
-    // 1.1 & 1.3 ดึงข้อมูลที่คุยกับ Broker มาอัปเดตลง UI หน้าเว็บ
-    client.on('message', (topic, message) => {
-        const msgStr = message.toString();
-        
-        if (topic === TOPIC_TEMP) {
-            document.getElementById('temp-val').innerText = msgStr + " °C";
-        } else if (topic === TOPIC_HUM) {
-            document.getElementById('hum-val').innerText = msgStr + " %";
-        } else if (topic === TOPIC_R1_STAT) {
-            updateRelayUI(1, msgStr);
-        } else if (topic === TOPIC_R2_STAT) {
-            updateRelayUI(2, msgStr);
-        }
-    });
-
-    // 1.2 & 2. เมื่อกดสวิตช์ ให้ Publish คำสั่งควบคุมไปยัง MQTT Broker
-    function toggleRelay(relayNum, isChecked) {
-        const cmdTopic = relayNum === 1 ? TOPIC_R1_CMD : TOPIC_R2_CMD;
-        const payload = isChecked ? "ON" : "OFF";
-        client.publish(cmdTopic, payload, { retain: true });
-    }
-
-    // อัปเดตการแสดงผลเมื่อได้รับสถานะสะท้อนกลับ (Feedback Status) จากบอร์ด
-    function updateRelayUI(relayNum, status) {
-        const statusText = document.getElementById(`r${relayNum}-status`);
-        const toggleInput = document.getElementById(`r${relayNum}-toggle`);
-        
-        statusText.innerText = "Status: " + status;
-        
-        if (status === "ON") {
-            statusText.style.color = "var(--pharaoh-gold)";
-            toggleInput.checked = true;
-        } else {
-            statusText.style.color = "#888";
-            toggleInput.checked = false;
-        }
-    }
-
-    // 1.6 ระบบเวลาอิงความเที่ยงตรงจากเครือข่ายมือถือ (จำลองการทำงาน NTP)
-    function updateClock() {
-        const now = new Date();
-        const timeStr = now.toTimeString().split(' ')[0];
-        document.getElementById('ntp-clock').innerText = "TIME: " + timeStr;
-        
-        // ตรวจสอบเงื่อนไขการเปิด-ปิดไฟตามเวลาที่ตั้งไว้
-        checkTimers(timeStr.substring(0, 5));
-    }
-    setInterval(updateClock, 1000);
-
-    // 1.7 ฟังก์ชันสร้างกล่องอินพุตตั้งเวลาสำหรับ 3 ช่วงเวลา
-    function generateTimerInputs() {
-        for (let r = 1; r <= 2; r++) {
-            const container = document.getElementById(`r${r}-timers`);
-            let html = '';
-            for (let i = 1; i <= 3; i++) {
-                html += `
-                    <div class="timer-slot">
-                        <span>Slot ${i}:</span>
-                        <label>ON <input type="time" id="r${r}-t${i}-on"></label>
-                        <label>OFF <input type="time" id="r${r}-t${i}-off"></label>
-                        <label><input type="checkbox" id="r${r}-t${i}-en"> En</label>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-    }
-    generateTimerInputs();
-
-    // ตัวแปรเช็คความถี่ลูปตั้งเวลาให้ออกคำสั่งแค่นาทีละ 1 ครั้ง
-    let lastCheckedMinute = "";
-    function checkTimers(currentHM) {
-        if (currentHM === lastCheckedMinute) return;
-        lastCheckedMinute = currentHM;
-
-        for (let r = 1; r <= 2; r++) {
-            for (let i = 1; i <= 3; i++) {
-                const enabled = document.getElementById(`r${r}-t${i}-en`).checked;
-                if (!enabled) continue;
-
-                const onTime = document.getElementById(`r${r}-t${i}-on`).value;
-                const offTime = document.getElementById(`r${r}-t${i}-off`).value;
-
-                if (currentHM === onTime) {
-                    toggleRelay(r, true);
-                    console.log(`Chamber Timer: Relay ${r} -> ON`);
-                } else if (currentHM === offTime) {
-                    toggleRelay(r, false);
-                    console.log(`Chamber Timer: Relay ${r} -> OFF`);
-                }
-            }
-        }
-    }
-</script>
-
-</body>
-</html>
+        let mqttClient = new Paho.MQTT.Client(BROKER, Number(PORT), CLIENT_ID
